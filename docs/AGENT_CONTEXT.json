@@ -1,0 +1,543 @@
+{
+  "project_metadata": {
+    "name": "Spatter Monitoring System",
+    "purpose": "Binary classification of gas flow levels from 3D printing spatter patterns",
+    "analysis_date": "2025-11-11T00:37:51.224534",
+    "python_version": "3.13",
+    "status": "research_prototype"
+  },
+  "file_structure": {
+    "extraction_stage": {
+      "main_script": "1 spatter extraction/spatter_fvideo_hdf5_bytes_v3.py",
+      "input_video": "1 spatter extraction/20210125_135031_section_1.mp4",
+      "output_hdf5": "1 spatter extraction/capture_20210125_135031_section_1/",
+      "csv_log": "1 spatter extraction/20210125_135031_section_1_spatter_at_frame.csv",
+      "key_functions": {
+        "bytes_encode": {
+          "line": "37-41",
+          "purpose": "Encode image to JPEG bytes"
+        },
+        "bytes_decode": {
+          "line": "43-44",
+          "purpose": "Decode JPEG bytes to image"
+        },
+        "reshape_square": {
+          "line": "46-65",
+          "purpose": "Resize and pad to square"
+        },
+        "spatter_tracking": {
+          "line": "67-282",
+          "purpose": "Main video processing loop"
+        }
+      }
+    },
+    "training_stage": {
+      "dataset_class": "2 cnn/spatter_dataset.py",
+      "model_1": "2 cnn/lenet5.py",
+      "model_2": "2 cnn/lenet5_withactivation.py",
+      "training_notebook": "2 cnn/train_lenet5_ModelTraining.ipynb",
+      "data_directory": "2 cnn/data/",
+      "checkpoint": "2 cnn/best_letnet5.mdl",
+      "key_classes": {
+        "Spatter": {
+          "line": "29-147",
+          "purpose": "RGB image dataset"
+        },
+        "Spatter_gray": {
+          "line": "149-267",
+          "purpose": "Grayscale image dataset (used)"
+        },
+        "Spatter_gray_ratio": {
+          "line": "269-384",
+          "purpose": "Adjustable class ratio dataset"
+        },
+        "Lenet5": {
+          "files": [
+            "lenet5.py:15-45",
+            "lenet5_withactivation.py:15-66"
+          ],
+          "purpose": "Binary classification CNN"
+        }
+      }
+    },
+    "analysis_outputs": {
+      "markdown_report": "ANALYSIS.md",
+      "json_report": "analysis_report.json",
+      "agent_context": "AGENT_CONTEXT.json",
+      "sample_visualization": "2 cnn/analysis_spatter_samples.png"
+    }
+  },
+  "data_summary": {
+    "total_images": 598933,
+    "class_distribution": {
+      "0_low_gas_flow": 306967,
+      "1_high_gas_flow": 291966,
+      "balance_ratio": 1.051
+    },
+    "splits": {
+      "train": {
+        "count": 359359,
+        "percentage": 60
+      },
+      "val": {
+        "count": 119787,
+        "percentage": 20
+      },
+      "test": {
+        "count": 119787,
+        "percentage": 20
+      }
+    },
+    "hdf5_files": [
+      {
+        "name": "left_low_0.h5",
+        "position": "left",
+        "label": 0,
+        "images": 101430,
+        "datasets": 11
+      },
+      {
+        "name": "left_high_2.h5",
+        "position": "left",
+        "label": 1,
+        "images": 106594,
+        "datasets": 11
+      },
+      {
+        "name": "mid_low_0.h5",
+        "position": "mid",
+        "label": 0,
+        "images": 101534,
+        "datasets": 11
+      },
+      {
+        "name": "mid_high_2.h5",
+        "position": "mid",
+        "label": 1,
+        "images": 91784,
+        "datasets": 10
+      },
+      {
+        "name": "right_low_0.h5",
+        "position": "right",
+        "label": 0,
+        "images": 104003,
+        "datasets": 11
+      },
+      {
+        "name": "right_high_2.h5",
+        "position": "right",
+        "label": 1,
+        "images": 93588,
+        "datasets": 10
+      }
+    ],
+    "image_dimensions": {
+      "height_range": [
+        26,
+        249
+      ],
+      "width_range": [
+        34,
+        314
+      ],
+      "area_range": [
+        2108,
+        46028
+      ],
+      "mean_area": 12515,
+      "median_area": 10885
+    },
+    "storage_efficiency": {
+      "compression_method": "JPEG + HDF5 gzip",
+      "compression_ratio": 18.4,
+      "space_saved_percentage": 92.2,
+      "total_size_gb": 2.1,
+      "uncompressed_estimate_gb": 38
+    }
+  },
+  "algorithms": {
+    "spatter_extraction": {
+      "method": "Frame differencing with morphological operations",
+      "steps": [
+        {
+          "step": 1,
+          "operation": "cv2.absdiff",
+          "purpose": "Detect motion between frames"
+        },
+        {
+          "step": 2,
+          "operation": "cv2.cvtColor(COLOR_BGR2GRAY)",
+          "purpose": "Convert to grayscale"
+        },
+        {
+          "step": 3,
+          "operation": "cv2.GaussianBlur((5,5))",
+          "purpose": "Reduce noise"
+        },
+        {
+          "step": 4,
+          "operation": "cv2.threshold(20)",
+          "purpose": "Binary threshold"
+        },
+        {
+          "step": 5,
+          "operation": "cv2.dilate(iterations=3)",
+          "purpose": "Fill gaps"
+        },
+        {
+          "step": 6,
+          "operation": "cv2.findContours",
+          "purpose": "Extract boundaries"
+        }
+      ],
+      "filters": {
+        "size_min": 2000,
+        "size_max": 15000,
+        "color_rejection": "Blue channel > (Red + Green)",
+        "layer_detection_gap": 700
+      }
+    },
+    "data_augmentation": {
+      "pipeline": [
+        {
+          "operation": "Resize",
+          "params": "(40, 40)",
+          "purpose": "1.25x target size"
+        },
+        {
+          "operation": "RandomRotation",
+          "params": "\u00b115\u00b0",
+          "purpose": "Orientation invariance"
+        },
+        {
+          "operation": "CenterCrop",
+          "params": "(32, 32)",
+          "purpose": "Final size"
+        },
+        {
+          "operation": "ToTensor",
+          "params": "normalize [0,1]",
+          "purpose": "PyTorch format"
+        }
+      ],
+      "grayscale_to_rgb": "torch.cat([x,x,x], dim=1)"
+    }
+  },
+  "model_architectures": {
+    "model_1_winner": {
+      "name": "LeNet5 (no conv activation)",
+      "file": "2 cnn/lenet5.py",
+      "test_accuracy": 0.9838,
+      "val_accuracy": 0.9843,
+      "layers": [
+        {
+          "type": "Conv2d",
+          "in": 3,
+          "out": 6,
+          "kernel": 5,
+          "output_shape": [
+            6,
+            28,
+            28
+          ]
+        },
+        {
+          "type": "MaxPool2d",
+          "kernel": 2,
+          "stride": 2,
+          "output_shape": [
+            6,
+            14,
+            14
+          ]
+        },
+        {
+          "type": "Conv2d",
+          "in": 6,
+          "out": 16,
+          "kernel": 5,
+          "output_shape": [
+            16,
+            10,
+            10
+          ]
+        },
+        {
+          "type": "MaxPool2d",
+          "kernel": 2,
+          "stride": 2,
+          "output_shape": [
+            16,
+            5,
+            5
+          ]
+        },
+        {
+          "type": "Flatten",
+          "output_shape": [
+            400
+          ]
+        },
+        {
+          "type": "Linear",
+          "in": 400,
+          "out": 120,
+          "activation": "ReLU"
+        },
+        {
+          "type": "Linear",
+          "in": 120,
+          "out": 84,
+          "activation": "ReLU"
+        },
+        {
+          "type": "Linear",
+          "in": 84,
+          "out": 1,
+          "activation": "None (logit)"
+        }
+      ],
+      "total_parameters": 61706
+    },
+    "model_2_alternative": {
+      "name": "LeNet5 (with conv activation)",
+      "file": "2 cnn/lenet5_withactivation.py",
+      "test_accuracy": 0.9352,
+      "val_accuracy": 0.9374,
+      "layers": [
+        {
+          "type": "Conv2d",
+          "in": 3,
+          "out": 6,
+          "kernel": 5,
+          "activation": "Tanh"
+        },
+        {
+          "type": "AvgPool2d",
+          "kernel": 2,
+          "stride": 2,
+          "activation": "Sigmoid"
+        },
+        {
+          "type": "Conv2d",
+          "in": 6,
+          "out": 16,
+          "kernel": 5,
+          "activation": "Tanh"
+        },
+        {
+          "type": "AvgPool2d",
+          "kernel": 2,
+          "stride": 2,
+          "activation": "Sigmoid"
+        },
+        {
+          "type": "Flatten"
+        },
+        {
+          "type": "Linear",
+          "in": 400,
+          "out": 120,
+          "activation": "ReLU"
+        },
+        {
+          "type": "Linear",
+          "in": 120,
+          "out": 84,
+          "activation": "ReLU"
+        },
+        {
+          "type": "Linear",
+          "in": 84,
+          "out": 1,
+          "activation": "None (logit)"
+        }
+      ],
+      "difference": "Uses AvgPool instead of MaxPool, adds Tanh/Sigmoid activations in conv layers"
+    }
+  },
+  "training_config": {
+    "optimizer": {
+      "type": "Adam",
+      "learning_rate": 0.001,
+      "betas": [
+        0.9,
+        0.999
+      ]
+    },
+    "loss_function": {
+      "type": "BCEWithLogitsLoss",
+      "description": "Combines sigmoid activation and binary cross-entropy"
+    },
+    "hyperparameters": {
+      "batch_size": 1024,
+      "epochs": 20,
+      "device": "CPU",
+      "random_seed": 1234
+    },
+    "evaluation": {
+      "metric": "Binary Accuracy",
+      "threshold": 0.5,
+      "method": "sigmoid(logit) > 0.5"
+    },
+    "training_time": {
+      "total_minutes": 99,
+      "per_epoch_minutes": 4.95,
+      "per_batch_seconds": -5
+    }
+  },
+  "dependencies": {
+    "confirmed_in_pyproject": [
+      "h5py>=3.15.1",
+      "matplotlib>=3.10.7",
+      "numpy>=2.3.4",
+      "opencv-python>=4.11.0.86",
+      "pandas>=2.3.3"
+    ],
+    "required_for_training": [
+      "torch>=1.7.0",
+      "torchvision>=0.8.0",
+      "pillow>=8.0.0",
+      "imutils>=0.5.4",
+      "visdom>=0.1.8"
+    ],
+    "development": [
+      "pytest>=6.0",
+      "black>=20.0",
+      "mypy>=0.900",
+      "flake8>=3.8"
+    ]
+  },
+  "production_gaps": {
+    "critical": [
+      "No inference pipeline for new videos",
+      "No error handling (no try/except blocks)",
+      "No proper logging (only print statements)",
+      "No model versioning or experiment tracking",
+      "Hardcoded configuration values"
+    ],
+    "important": [
+      "No unit or integration tests",
+      "No ONNX/TorchScript export for deployment",
+      "No REST API endpoint",
+      "No Docker containerization",
+      "Minimal documentation (no docstrings)"
+    ],
+    "nice_to_have": [
+      "No CI/CD pipeline",
+      "No monitoring/metrics (Prometheus)",
+      "No web demo interface",
+      "No model performance regression tests"
+    ]
+  },
+  "implementation_phases": {
+    "phase_1_foundation": {
+      "duration_weeks": "1-2",
+      "tasks": [
+        "Add all dependencies to pyproject.toml",
+        "Create config.yaml for parameters",
+        "Add logging.Logger throughout",
+        "Add error handling (try/except)",
+        "Write comprehensive README.md"
+      ]
+    },
+    "phase_2_inference": {
+      "duration_weeks": "2-3",
+      "tasks": [
+        "Create inference.py script",
+        "Export model to ONNX format",
+        "Build CLI with click/typer",
+        "Add batch processing support",
+        "Write unit tests"
+      ]
+    },
+    "phase_3_deployment": {
+      "duration_weeks": "2-3",
+      "tasks": [
+        "Create FastAPI REST endpoint",
+        "Write Dockerfile",
+        "Add Prometheus metrics",
+        "Setup CI/CD (GitHub Actions)",
+        "Deploy demo to cloud"
+      ]
+    },
+    "phase_4_demo": {
+      "duration_weeks": "1-2",
+      "tasks": [
+        "Create Streamlit web interface",
+        "Add real-time video visualization",
+        "Build confidence/explanation dashboard",
+        "Write API documentation",
+        "Record demo video"
+      ]
+    }
+  },
+  "key_insights": {
+    "technical": [
+      "98.38% test accuracy shows spatter patterns are highly discriminative for gas flow",
+      "JPEG compression (18.4x) doesn't hurt accuracy despite lossy encoding",
+      "Grayscale sufficient - color information not needed for classification",
+      "Large batch size (1024) works well on CPU for this dataset size",
+      "Simple LeNet5 achieves near-perfect accuracy (complex models not needed)"
+    ],
+    "domain": [
+      "Gas flow level significantly affects spatter characteristics (validated by 98% accuracy)",
+      "Multi-angle camera capture (left/mid/right) provides comprehensive monitoring",
+      "Real-time layer detection possible with 700-frame gap heuristic",
+      "Blue channel filtering effectively removes recoating light artifacts",
+      "Size filter (2K-15K pixels) effectively separates spatter from noise"
+    ],
+    "surprising": [
+      "CPU training feasible (~99 min) - no GPU required",
+      "Modern LeNet5 (MaxPool) beats classical version (AvgPool+activations) by 4.86%",
+      "Variable image sizes (26-314px) handled well by transform pipeline",
+      "Near-perfect class balance (51/49) without manual balancing",
+      "Some images completely black (1-2%) but doesn't affect training"
+    ]
+  },
+  "usage_examples": {
+    "extract_spatters": {
+      "command": "uv run python '1 spatter extraction/spatter_fvideo_hdf5_bytes_v3.py' video.mp4 --startframe 0 --capture --minarea 2000",
+      "input": "video.mp4 (640x360, 25 FPS)",
+      "output": "HDF5 file with JPEG-encoded spatter images + CSV log"
+    },
+    "train_model": {
+      "command": "jupyter notebook '2 cnn/train_lenet5_ModelTraining.ipynb'",
+      "input": "6 HDF5 files in 2 cnn/data/",
+      "output": "best_letnet5.mdl checkpoint + training metrics CSV"
+    },
+    "future_inference": {
+      "command": "uv run python inference.py video.mp4 --model best_letnet5.mdl --output predictions.csv",
+      "note": "Not yet implemented - Phase 2 task"
+    }
+  },
+  "performance_benchmarks": {
+    "data_loading": {
+      "hdf5_read_ms": "5-8",
+      "jpeg_decode_ms": "1-2",
+      "transforms_ms": "2-3",
+      "total_per_image_ms": "8-13"
+    },
+    "training": {
+      "images_per_second": "~70-80",
+      "batch_1024_seconds": "10-15",
+      "epoch_minutes": "90-95",
+      "total_20_epochs_minutes": 99
+    },
+    "storage": {
+      "total_images": 598933,
+      "total_size_gb": 2.1,
+      "bytes_per_image_avg": 3680,
+      "compression_ratio": 18.4
+    }
+  },
+  "agent_instructions": {
+    "when_working_on_extraction": "Refer to ANALYSIS.md 'Stage 1: Spatter Extraction' section. Key file: '1 spatter extraction/spatter_fvideo_hdf5_bytes_v3.py'. Algorithm uses frame differencing (lines 146-151), filtering (lines 162-166), and HDF5 chunking (lines 191-199).",
+    "when_working_on_training": "Refer to ANALYSIS.md 'Stage 2: CNN Classification' section. Key files: '2 cnn/spatter_dataset.py' (dataset), '2 cnn/lenet5.py' (best model), '2 cnn/train_lenet5_ModelTraining.ipynb' (training). Use Model 1 (no conv activation) as baseline.",
+    "when_adding_inference": "Need to create new 'inference.py'. Load model from 'best_letnet5.mdl', extract spatters using existing extraction code, preprocess with Spatter_gray transforms, run predictions, output CSV with frame-by-frame results.",
+    "when_fixing_bugs": "Common issues: (1) Black images in dataset (check idx != 0), (2) HDF5 file not closed (use context manager), (3) JPEG decode failure (check io_buf not empty), (4) Transform dimension mismatch (verify 32x32 output).",
+    "when_writing_tests": "Test extraction: mock video input, verify contour detection. Test dataset: check __getitem__ returns correct shape/dtype, verify CSV-HDF5 alignment. Test model: check forward pass shape, verify saved checkpoint loads.",
+    "general_context": "This is a research prototype with strong algorithms but needs productionization. Priority: inference pipeline, error handling, logging, tests. Reference ANALYSIS.md for complete technical details."
+  }
+}

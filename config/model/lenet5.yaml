@@ -1,0 +1,15 @@
+# LeNet5 Model Configuration
+
+name: "lenet5"
+
+# Model architecture
+architecture:
+  in_channels: 3  # 3 channels (grayscale replicated to RGB)
+  num_classes: 1  # Binary classification (single output neuron)
+
+# Note: Grayscale images (1 channel) are replicated to 3 channels
+# during training to match LeNet5 input expectation
+# Dataset outputs [B, 1, 32, 32] -> Training replicates to [B, 3, 32, 32]
+
+# Pretrained weights (optional)
+pretrained: null  # Path to .pth file or null

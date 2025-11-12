@@ -1,0 +1,165 @@
+{
+  "metadata": {
+    "analysis_date": "2025-11-11T00:30:07.492297",
+    "project_name": "Spatter Monitoring for 3D Printing",
+    "project_path": "/Users/hdj/projects/spatter_monitoring"
+  },
+  "dataset_summary": {
+    "total_images": 598933,
+    "class_0_low_gas": 306967,
+    "class_1_high_gas": 291966,
+    "class_balance_ratio": "1.051:1",
+    "perfectly_balanced": false,
+    "train_split_60pct": 359359,
+    "val_split_20pct": 119787,
+    "test_split_20pct": 119787
+  },
+  "data_storage": {
+    "format": "HDF5 with gzip compression",
+    "encoding": "JPEG bytes",
+    "total_hdf5_files": 6,
+    "chunk_size_images_per_dataset": 10000,
+    "total_datasets_across_files": 64,
+    "storage_efficiency": {
+      "jpeg_compression_ratio": "18.4x average",
+      "space_saved_by_jpeg": "92.2%",
+      "additional_gzip_on_hdf5": "Yes"
+    }
+  },
+  "image_characteristics": {
+    "format": "Variable size RGB (BGR in OpenCV)",
+    "height_range_pixels": "26-249 (mean: 96.3, median: 90.5)",
+    "width_range_pixels": "34-314 (mean: 123.7, median: 119.0)",
+    "area_range_pixels": "2,108-46,028 (mean: 12,515, median: 10,885)",
+    "typical_area_range": "10K-20K pixels (38.8% of dataset)",
+    "preprocessing_for_training": "Resize 1.25x \u2192 Random rotation \u00b115\u00b0 \u2192 Center crop 32x32 \u2192 Grayscale"
+  },
+  "experimental_design": {
+    "independent_variables": [
+      "Camera position (left, mid, right)",
+      "Gas flow level (low=0, high=1)"
+    ],
+    "design": "3 positions \u00d7 2 conditions = 6 experimental groups",
+    "data_collection": "Real 3D printing process video monitoring",
+    "labeling": "Binary classification: gas flow level affects spatter patterns"
+  },
+  "video_processing": {
+    "input_video_example": "20210125_135031_section_1.mp4",
+    "video_duration": "200.8 minutes (~3.35 hours)",
+    "video_resolution": "640x360 pixels @ 25 FPS",
+    "total_frames": 301176,
+    "algorithm": "Frame differencing + morphological operations",
+    "filters": [
+      "Size filter: 2000-15000 pixels",
+      "Blue channel filter (removes recoating light)",
+      "Gaussian blur (5x5 kernel)",
+      "Binary threshold (value=20)",
+      "Morphological dilation (3 iterations)"
+    ],
+    "layer_detection": "700-frame gap heuristic",
+    "output": "HDF5 + frame-by-frame CSV log"
+  },
+  "model_architecture": {
+    "base": "LeNet5 adapted for binary classification",
+    "input": "32x32x3 (grayscale replicated to RGB)",
+    "conv_layers": "3\u21926\u219216 feature maps",
+    "fc_layers": "400\u2192120\u219284\u21921",
+    "total_parameters": "~62K (estimated)",
+    "variants_tested": 2,
+    "best_model": "LeNet5 without conv activations (MaxPool)",
+    "alternative": "LeNet5 with Tanh/Sigmoid activations (AvgPool)"
+  },
+  "training_configuration": {
+    "optimizer": "Adam (lr=1e-3)",
+    "loss_function": "BCEWithLogitsLoss",
+    "batch_size": 1024,
+    "epochs": 20,
+    "device": "CPU",
+    "data_augmentation": "Random rotation \u00b115\u00b0",
+    "evaluation_threshold": "Sigmoid > 0.5",
+    "reproducibility": "Manual seed = 1234"
+  },
+  "performance_results": {
+    "model_1_no_conv_activation": {
+      "architecture": "Conv \u2192 MaxPool \u2192 Conv \u2192 MaxPool \u2192 FC(ReLU) \u2192 FC(ReLU) \u2192 FC",
+      "best_val_accuracy": 0.9843,
+      "test_accuracy": 0.9838,
+      "training_time": "~99 minutes (20 epochs)"
+    },
+    "model_2_with_conv_activation": {
+      "architecture": "Conv \u2192 Tanh \u2192 AvgPool \u2192 Sigmoid \u2192 Conv \u2192 Tanh \u2192 AvgPool \u2192 Sigmoid \u2192 FC(ReLU) \u2192 FC(ReLU) \u2192 FC",
+      "best_val_accuracy": 0.9374,
+      "test_accuracy": 0.9352,
+      "training_time": "~98 minutes (20 epochs)"
+    },
+    "winner": "Model 1 (4.86% higher test accuracy)"
+  },
+  "code_quality": {
+    "strengths": [
+      "Efficient lazy loading from HDF5",
+      "Double compression strategy (JPEG + gzip)",
+      "Custom dataset with proper train/val/test split",
+      "Data augmentation implemented",
+      "Reproducible (seeded random)",
+      "Real-time training monitoring (Visdom)",
+      "Comprehensive spatter detection algorithm"
+    ],
+    "areas_for_production": [
+      "No inference pipeline",
+      "No error handling",
+      "No logging (only print statements)",
+      "No tests",
+      "Hardcoded configurations",
+      "No model versioning",
+      "No deployment artifacts (ONNX/TorchScript)",
+      "No API endpoint",
+      "No containerization (Docker)",
+      "Minimal documentation"
+    ]
+  },
+  "dependencies_identified": {
+    "computer_vision": [
+      "opencv-python>=4.5",
+      "imutils>=0.5"
+    ],
+    "deep_learning": [
+      "torch>=1.7",
+      "torchvision>=0.8",
+      "h5py>=3.0"
+    ],
+    "data_science": [
+      "numpy>=1.19",
+      "pandas>=1.2",
+      "pillow>=8.0"
+    ],
+    "visualization": [
+      "matplotlib>=3.3",
+      "visdom>=0.1"
+    ],
+    "python_version": "3.7-3.9 (current: 3.13 available)"
+  },
+  "key_findings": {
+    "technical": [
+      "98.38% test accuracy shows spatter patterns are highly discriminative",
+      "Class balance is near-perfect (51.25% vs 48.75%)",
+      "Variable image sizes (26-314 pixels) handled well by transforms",
+      "JPEG compression provides 18.4x reduction with minimal quality loss",
+      "Modern LeNet5 (MaxPool, no conv activation) outperforms classical version",
+      "CPU training is feasible for this dataset size (~99 min for 20 epochs)"
+    ],
+    "domain": [
+      "Gas flow level significantly affects spatter characteristics",
+      "Multi-angle camera capture provides comprehensive monitoring",
+      "Real-time layer detection is possible (700-frame heuristic)",
+      "Blue channel filtering effectively removes recoating artifacts",
+      "Spatter size filter (2K-15K pixels) effectively removes noise"
+    ],
+    "surprises": [
+      "Some images in dataset are completely black (failed captures?)",
+      "High compression doesn't hurt accuracy (98%+ with JPEG)",
+      "Grayscale sufficient (color not needed for classification)",
+      "Large batch size (1024) works well on CPU",
+      "Simple LeNet5 achieves near-perfect accuracy"
+    ]
+  }
+}

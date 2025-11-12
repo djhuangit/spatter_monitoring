@@ -1,0 +1,38 @@
+# Python-generated files
+__pycache__/
+
+# Virtual environments
+.venv
+
+# IDEs
+.vscode/
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# Data (large files)
+/data
+
+# Logs
+*.log
+logs/
+
+# Hydra
+outputs/
+multirun/
+
+# Environment
+.env
+
+# Legacy (keep structure, ignore large files)
+legacy/*/**/*.h5
+legacy/*/**/*.mp4
+legacy/*/**/*.avi
+legacy/*/**/*.csv
+legacy/*/**/*.mdl
+
+# Claude
+.claude
+

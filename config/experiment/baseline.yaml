@@ -1,0 +1,42 @@
+# @package _global_
+
+# Baseline experiment configuration
+# This replicates the original 98.38% accuracy setup
+
+defaults:
+  - override /model: lenet5
+  - override /training: default
+  - override /data: dataset
+
+experiment:
+  name: "baseline"
+  tags: ["lenet5", "grayscale", "binary", "baseline"]
+  notes: "Baseline reproduction of 98.38% test accuracy model"
+
+# Use grayscale images
+data:
+  grayscale: true
+  resize: 32
+
+# LeNet5 with 3 channels (grayscale replicated)
+model:
+  architecture:
+    in_channels: 3
+    num_classes: 1
+
+# Training config from original
+training:
+  epochs: 20
+  batch_size: 1024
+  optimizer:
+    name: "adam"
+    lr: 0.001
+    weight_decay: 0.0001
+
+# Auto-select device
+device: "auto"
+
+# Enable MLflow tracking
+mlflow:
+  enabled: false
+  experiment_name: "spatter_baseline"

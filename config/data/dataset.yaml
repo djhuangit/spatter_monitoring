@@ -1,0 +1,32 @@
+# Dataset configuration
+
+# HDF5 files and labels (binary classification)
+# 6 files: 3 positions × 2 gas flow levels
+files:
+  - "left_low_0.h5"
+  - "left_high_2.h5"
+  - "mid_low_0.h5"
+  - "mid_high_2.h5"
+  - "right_low_0.h5"
+  - "right_high_2.h5"
+
+labels: [0, 1, 0, 1, 0, 1]  # 0=low gas flow, 1=high gas flow
+
+# CSV index file
+csv_filename: "images.csv"
+
+# Image preprocessing
+resize: 32  # Target image size (32x32)
+grayscale: true  # Use grayscale images (single channel)
+
+# Data splits (60/20/20)
+splits:
+  train: 0.6
+  val: 0.2
+  test: 0.2
+
+# Transforms
+transforms:
+  rotation_degrees: 15  # Random rotation for augmentation
+  resize_factor: 1.25   # Buffer for rotation (prevents black corners)
+  normalize: false      # ImageNet normalization (not needed for grayscale)

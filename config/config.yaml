@@ -1,0 +1,32 @@
+# Base configuration for spatter monitoring
+# Use Hydra to override: python script.py data.resize=64 training.batch_size=512
+
+defaults:
+  - model: lenet5
+  - training: default
+  - data: dataset
+  - _self_
+
+# Experiment tracking
+experiment:
+  name: "baseline"
+  tags: ["lenet5", "grayscale", "binary"]
+  notes: "Baseline LeNet5 model with 98.38% test accuracy"
+
+# Random seed for reproducibility
+seed: 42
+
+# Device selection (cpu, mps, cuda, or auto)
+device: "auto"
+
+# Paths
+paths:
+  data_root: "data/processed/hdf5"
+  checkpoint_dir: "data/models/checkpoints"
+  log_dir: "logs"
+
+# MLflow tracking
+mlflow:
+  enabled: false
+  tracking_uri: "mlruns"
+  experiment_name: "spatter_monitoring"

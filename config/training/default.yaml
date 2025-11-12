@@ -1,0 +1,53 @@
+# Training Configuration
+
+# Optimizer
+optimizer:
+  name: "adam"
+  lr: 0.001
+  weight_decay: 0.0001
+
+# Loss function
+loss: "bce_with_logits"  # BCEWithLogitsLoss for binary classification
+
+# Training parameters
+epochs: 20
+batch_size: 1024  # Works well on CPU (~99 min for 20 epochs)
+
+# DataLoader
+num_workers: 4
+pin_memory: true  # Speed up GPU transfer
+persistent_workers: true  # Keep workers alive between epochs
+
+# Checkpointing
+checkpoint:
+  save_every: 5  # Save every N epochs
+  save_best: true  # Save best model by val accuracy
+  monitor: "val_accuracy"  # Metric to monitor
+  mode: "max"  # max for accuracy, min for loss
+
+# Early stopping
+early_stopping:
+  enabled: true
+  patience: 3  # Stop if no improvement for N epochs
+  monitor: "val_accuracy"
+  mode: "max"
+  min_delta: 0.001  # Minimum change to qualify as improvement
+
+# Learning rate scheduler
+scheduler:
+  enabled: false
+  name: "reduce_on_plateau"
+  patience: 5
+  factor: 0.5
+  min_lr: 0.00001
+
+# Gradient clipping
+grad_clip:
+  enabled: false
+  max_norm: 1.0
+
+# Mixed precision training (for CUDA)
+mixed_precision: false
+
+# Logging
+log_every: 10  # Log every N batches
